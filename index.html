@@ -1,78 +1,67 @@
 ﻿<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Ruffle SWF Proporcional</title>
-    <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        #player-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        ruffle-player {
-            max-width: 100%;
-            max-height: 100%;
-            display: block;
-            object-fit: contain; /* Mantiene proporción */
-        }
-        #fullscreen-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 8px 12px;
-            font-size: 16px;
-            cursor: pointer;
-            z-index: 100;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Animación lucaso16Tot</title>
+  <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    #flash-container {
+      width: 800px;
+      height: 600px;
+      background: #000;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #444;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #666;
+    }
+  </style>
 </head>
 <body>
-    <div id="player-container">
-        <ruffle-player id="player" src="lucaso16Tot.swf"></ruffle-player>
-    </div>
-    <button id="fullscreen-btn">Pantalla Completa</button>
+  <div id="flash-container"></div>
+  <button onclick="goFullscreen()">Pantalla completa</button>
 
-    <script>
-        const btn = document.getElementById("fullscreen-btn");
-        const container = document.getElementById("player-container");
+  <script>
+    // Auto-inicialización de Ruffle
+    window.RufflePlayer = window.RufflePlayer || {};
+    window.addEventListener("DOMContentLoaded", (event) => {
+      const ruffle = window.RufflePlayer.newest();
+      const player = ruffle.createPlayer();
+      const container = document.getElementById("flash-container");
+      container.appendChild(player);
+      player.load("lucaso16Tot.swf");
+    });
 
-        // Función para pantalla completa
-        btn.addEventListener("click", () => {
-            if (container.requestFullscreen) {
-                container.requestFullscreen();
-            } else if (container.webkitRequestFullscreen) { /* Safari */
-                container.webkitRequestFullscreen();
-            } else if (container.msRequestFullscreen) { /* IE11 */
-                container.msRequestFullscreen();
-            }
-        });
-
-        // Ajustar el tamaño del contenedor automáticamente al cambiar la ventana
-        function ajustarTamaño() {
-            // El contenedor ya usa flex y ruffle-player usa object-fit: contain
-            // Así que solo necesitamos asegurarnos de que ocupe todo el viewport
-            container.style.width = window.innerWidth + "px";
-            container.style.height = window.innerHeight + "px";
-        }
-
-        window.addEventListener("resize", ajustarTamaño);
-        window.addEventListener("load", ajustarTamaño);
-        document.addEventListener("fullscreenchange", ajustarTamaño);
-    </script>
+    // Función de pantalla completa
+    function goFullscreen() {
+      const container = document.getElementById("flash-container");
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+      } else if (container.msRequestFullscreen) {
+        container.msRequestFullscreen();
+      }
+    }
+  </script>
 </body>
 </html>
-
