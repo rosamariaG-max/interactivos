@@ -1,67 +1,92 @@
 ﻿<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Animación lucaso16Tot</title>
-  <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
-  <style>
-    body {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
-    }
-    #flash-container {
-      width: 800px;
-      height: 600px;
-      background: #000;
-    }
-    button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      background: #444;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #666;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Ruffle SWF Proporcional (Funcional)</title>
+    <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+        }
+        #player-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        ruffle-player {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        #fullscreen-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 100;
+        }
+    </style>
 </head>
 <body>
-  <div id="flash-container"></div>
-  <button onclick="goFullscreen()">Pantalla completa</button>
+    <div id="player-container">
+        <ruffle-player id="player" src="lucaso16Tot.swf"></ruffle-player>
+    </div>
+    <button id="fullscreen-btn">Pantalla Completa</button>
 
-  <script>
-    // Auto-inicialización de Ruffle
-    window.RufflePlayer = window.RufflePlayer || {};
-    window.addEventListener("DOMContentLoaded", (event) => {
-      const ruffle = window.RufflePlayer.newest();
-      const player = ruffle.createPlayer();
-      const container = document.getElementById("flash-container");
-      container.appendChild(player);
-      player.load("lucaso16Tot.swf");
-    });
+    <script>
+        const btn = document.getElementById("fullscreen-btn");
+        const container = document.getElementById("player-container");
+        const player = document.getElementById("player");
 
-    // Función de pantalla completa
-    function goFullscreen() {
-      const container = document.getElementById("flash-container");
-      if (container.requestFullscreen) {
-        container.requestFullscreen();
-      } else if (container.webkitRequestFullscreen) {
-        container.webkitRequestFullscreen();
-      } else if (container.msRequestFullscreen) {
-        container.msRequestFullscreen();
-      }
-    }
-  </script>
+        // Activar pantalla completa
+        btn.addEventListener("click", () => {
+            if (container.requestFullscreen) {
+                container.requestFullscreen();
+            } else if (container.webkitRequestFullscreen) {
+                container.webkitRequestFullscreen();
+            } else if (container.msRequestFullscreen) {
+                container.msRequestFullscreen();
+            }
+        });
+
+        // Mantener proporción original del SWF
+        function ajustarProporcion() {
+            // Usa el tamaño "natural" del SWF si está disponible
+            const anchoOriginal = player.offsetWidth || 800;
+            const altoOriginal = player.offsetHeight || 600;
+            const ratio = anchoOriginal / altoOriginal;
+
+            const anchoVentana = window.innerWidth;
+            const altoVentana = window.innerHeight;
+
+            let anchoFinal = anchoVentana;
+            let altoFinal = anchoVentana / ratio;
+
+            if (altoFinal > altoVentana) {
+                altoFinal = altoVentana;
+                anchoFinal = altoFinal * ratio;
+            }
+
+            player.style.width = anchoFinal + "px";
+            player.style.height = altoFinal + "px";
+        }
+
+        window.addEventListener("resize", ajustarProporcion);
+        window.addEventListener("load", ajustarProporcion);
+        document.addEventListener("fullscreenchange", ajustarProporcion);
+    </script>
 </body>
 </html>
