@@ -21,10 +21,6 @@
       height: 600px;
       background: #000;
     }
-    ruffle-player {
-      width: 100%;
-      height: 100%;
-    }
     button {
       margin-top: 15px;
       padding: 10px 20px;
@@ -41,20 +37,29 @@
   </style>
 </head>
 <body>
-  <div id="flash-container">
-    <ruffle-player id="player" src="lucaso16Tot.swf"></ruffle-player>
-  </div>
+  <div id="flash-container"></div>
   <button onclick="goFullscreen()">Pantalla completa</button>
 
   <script>
+    // Auto-inicialización de Ruffle
+    window.RufflePlayer = window.RufflePlayer || {};
+    window.addEventListener("DOMContentLoaded", (event) => {
+      const ruffle = window.RufflePlayer.newest();
+      const player = ruffle.createPlayer();
+      const container = document.getElementById("flash-container");
+      container.appendChild(player);
+      player.load("lucaso16Tot.swf");
+    });
+
+    // Función de pantalla completa
     function goFullscreen() {
-      const player = document.getElementById('player');
-      if (player.requestFullscreen) {
-        player.requestFullscreen();
-      } else if (player.webkitRequestFullscreen) { /* Safari */
-        player.webkitRequestFullscreen();
-      } else if (player.msRequestFullscreen) { /* IE11 */
-        player.msRequestFullscreen();
+      const container = document.getElementById("flash-container");
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+      } else if (container.msRequestFullscreen) {
+        container.msRequestFullscreen();
       }
     }
   </script>
