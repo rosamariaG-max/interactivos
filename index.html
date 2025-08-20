@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ruffle SWF Alternar + Pantalla Completa</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ruffle SWF Alternar + Botones Flotantes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://unpkg.com/@ruffle-rs/ruffle" defer></script>
     <style>
         html, body {
@@ -12,34 +12,43 @@
             width: 100%;
             height: 100%;
             background-color: #000;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
-            flex-direction: column;
         }
         #player-container {
-            max-width: 100%;
-            max-height: 100%;
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
         }
         ruffle-player {
-            display: block;
             max-width: 100%;
             max-height: 100%;
             width: auto;
             height: auto;
         }
         #controls {
-            margin-top: 10px;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
         }
-        button {
+        #controls button {
             padding: 8px 12px;
-            font-size: 16px;
+            font-size: 14px;
             cursor: pointer;
-            margin: 0 5px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.5);
+            color: #fff;
+            border-radius: 6px;
+        }
+        #controls button:hover {
+            background: rgba(255,255,255,0.4);
         }
     </style>
 </head>
@@ -52,20 +61,27 @@
     </div>
 
     <script>
-        const swfs = ["luluTot.swf", " lucaso16Tot.swf "]; // tus SWF
+        const swfs = ["luluTot.swf", " lucaso16Tot.swf"]; // tus SWF
         let current = 0;
+
         const container = document.getElementById("player-container");
         const ruffle = window.RufflePlayer.newest();
         let player = null;
 
         function loadSWF(index) {
-            container.innerHTML = ""; // limpia contenedor
+            container.innerHTML = ""; // limpiar contenedor
             player = ruffle.createPlayer();
-            player.load(swfs[index]).catch(err => console.error("Error cargando SWF:", err));
+
+            // Tamaño inicial para evitar que sea 0x0
+            player.style.width = "800px";
+            player.style.height = "600px";
+
             container.appendChild(player);
+
+            player.load(swfs[index]).catch(err => console.error("Error cargando SWF:", err));
         }
 
-        // Botones de navegación
+        // Botones navegación
         document.getElementById("next").addEventListener("click", () => {
             current = (current + 1) % swfs.length;
             loadSWF(current);
@@ -76,23 +92,38 @@
             loadSWF(current);
         });
 
-        // Pantalla completa sobre el SWF actual
+        // Pantalla completa
         document.getElementById("fullscreen").addEventListener("click", () => {
-            if (!player) return;
-            if (player.requestFullscreen) player.requestFullscreen();
-            else if (player.webkitRequestFullscreen) player.webkitRequestFullscreen();
-            else if (player.msRequestFullscreen) player.msRequestFullscreen();
+            if (player) {
+                if (player.requestFullscreen) player.requestFullscreen();
+                else if (player.webkitRequestFullscreen) player.webkitRequestFullscreen();
+                else if (player.msRequestFullscreen) player.msRequestFullscreen();
+            }
         });
 
-        // Carga inicial
-        window.addEventListener("load", () => loadSWF(current));
-
-        // Ajuste responsivo
-        window.addEventListener("resize", () => {
+        // Escalado responsivo manteniendo proporción
+        function ajustarProporcion() {
             if (!player) return;
-            player.style.maxWidth = window.innerWidth + "px";
-            player.style.maxHeight = window.innerHeight + "px";
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const ratio = 4/3; // ajusta si tu SWF es otra proporción
+            let w = vw;
+            let h = w / ratio;
+            if (h > vh) {
+                h = vh;
+                w = h * ratio;
+            }
+            player.style.width = w + "px";
+            player.style.height = h + "px";
+        }
+
+        window.addEventListener("resize", ajustarProporcion);
+        window.addEventListener("load", () => {
+            loadSWF(current);
+            ajustarProporcion();
         });
+        document.addEventListener("fullscreenchange", ajustarProporcion);
     </script>
 </body>
 </html>
+
