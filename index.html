@@ -1,57 +1,112 @@
 ﻿<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Ruffle SWF Responsivo Simple</title>
-    <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-        ruffle-player {
-            max-width: 100%;
-            max-height: 100%;
-            width: auto;
-            height: auto;
-            display: block;
-        }
-        #fullscreen-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 8px 12px;
-            font-size: 16px;
-            cursor: pointer;
-            z-index: 100;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Ruffle SWF Proporcional (Robusto)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Carga Ruffle -->
+  <script src="https://unpkg.com/@ruffle-rs/ruffle" defer></script>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #000;
+    }
+    /* Contenedor a pantalla completa y centrado */
+    #stage {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: #000;
+      overflow: hidden;
+    }
+    /* El player ocupará exactamente el tamaño que fijemos por JS */
+    #player {
+      display: block;
+    }
+    /* Botón de pantalla completa */
+    #fs {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 10;
+      padding: 8px 12px;
+      font: 14px system-ui, sans-serif;
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 8px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
+    #fs:hover { background: rgba(255,255,255,.2); }
+  </style>
 </head>
 <body>
-    <ruffle-player id="player" src="lucaso16Tot.swf"></ruffle-player>
-    <button id="fullscreen-btn">Pantalla Completa</button>
+  <div id="stage"></div>
+  <button id="fs" type="button">Pantalla completa</button>
 
-    <script>
-        const btn = document.getElementById("fullscreen-btn");
-        const player = document.getElementById("player");
+  <script>
+    // === Ajusta esto si tu SWF NO es 4:3 ===
+    const RATIO = 4 / 3; // ancho / alto (ej.: 16/9 si tu escenario es panorámico)
+    const SWF_PATH = "lucaso16Tot.swf"; // tu archivo
 
-        // Activar pantalla completa
-        btn.addEventListener("click", () => {
-            if (player.requestFullscreen) {
-                player.requestFullscreen();
-            } else if (player.webkitRequestFullscreen) { /* Safari */
-                player.webkitRequestFullscreen();
-            } else if (player.msRequestFullscreen) { /* IE11 */
-                player.msRequestFullscreen();
-            }
-        });
-    </script>
+    let player;
+
+    function fit() {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      // Encajar manteniendo proporción
+      let w = vw;
+      let h = w / RATIO;
+      if (h > vh) {
+        h = vh;
+        w = h * RATIO;
+      }
+      if (player) {
+        player.style.width = w + "px";
+        player.style.height = h + "px";
+      }
+    }
+
+    // Pantalla completa sobre el contenedor
+    function goFullscreen() {
+      const stage = document.getElementById("stage");
+      if (stage.requestFullscreen) stage.requestFullscreen();
+      else if (stage.webkitRequestFullscreen) stage.webkitRequestFullscreen();
+      else if (stage.msRequestFullscreen) stage.msRequestFullscreen();
+    }
+
+    // Inicializa Ruffle y carga el SWF
+    window.addEventListener("load", () => {
+      const stage = document.getElementById("stage");
+      const ruffle = window.RufflePlayer?.newest();
+      if (!ruffle) {
+        console.error("Ruffle no se cargó. Revisa la etiqueta <script> del CDN.");
+        return;
+      }
+      player = ruffle.createPlayer();
+      player.id = "player";
+      stage.appendChild(player);
+
+      // Fijamos tamaño antes de cargar para evitar 0x0
+      fit();
+
+      // Carga el SWF
+      player.load(SWF_PATH).catch(err => {
+        console.error("Error cargando SWF:", err);
+      });
+    });
+
+    // Reajusta en cambios de ventana y de pantalla completa
+    window.addEventListener("resize", fit);
+    document.addEventListener("fullscreenchange", fit);
+
+    // Botón FS
+    document.getElementById("fs").addEventListener("click", goFullscreen);
+  </script>
 </body>
 </html>
+
