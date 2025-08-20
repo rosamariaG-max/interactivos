@@ -1,134 +1,111 @@
 ﻿<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Ruffle SWF Alternar - Comprobado</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://unpkg.com/@ruffle-rs/ruffle" defer></script>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        #player-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        ruffle-player {
-            max-width: 100%;
-            max-height: 100%;
-            width: auto;
-            height: auto;
-        }
-        #controls {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            gap: 8px;
-            z-index: 10;
-        }
-        #controls button {
-            padding: 8px 12px;
-            font-size: 14px;
-            cursor: pointer;
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.5);
-            color: #fff;
-            border-radius: 6px;
-        }
-        #controls button:hover {
-            background: rgba(255,255,255,0.4);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Ruffle SWF Proporcional (Robusto)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Carga Ruffle -->
+  <script src="https://unpkg.com/@ruffle-rs/ruffle" defer></script>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #000;
+    }
+    /* Contenedor a pantalla completa y centrado */
+    #stage {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: #000;
+      overflow: hidden;
+    }
+    /* El player ocupará exactamente el tamaño que fijemos por JS */
+    #player {
+      display: block;
+    }
+    /* Botón de pantalla completa */
+    #fs {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 10;
+      padding: 8px 12px;
+      font: 14px system-ui, sans-serif;
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 8px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+    }
+    #fs:hover { background: rgba(255,255,255,.2); }
+  </style>
 </head>
 <body>
-    <div id="player-container"></div>
-    <div id="controls">
-        <button id="prev">Anterior</button>
-        <button id="next">Siguiente</button>
-        <button id="fullscreen">Pantalla Completa</button>
-    </div>
+  <div id="stage"></div>
+  <button id="fs" type="button">Pantalla completa</button>
 
-    <script>
-        const swfs = ["luluTot.swf", "lucaso16Tot.swf"]; // tus SWF
-        let current = 0;
+  <script>
+    // === Ajusta esto si tu SWF NO es 4:3 ===
+    const RATIO = 4 / 3; // ancho / alto (ej.: 16/9 si tu escenario es panorámico)
+    const SWF_PATH = ["luluTot.swf", "lucaso16Tot.swf"];// tu archive
 
-        const container = document.getElementById("player-container");
-        let player = null;
+ let player;
 
-        function loadSWF(index) {
-            container.innerHTML = ""; // limpiar contenedor
+    function fit() {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
 
-            const ruffle = window.RufflePlayer?.newest();
-            if (!ruffle) {
-                console.error("Ruffle no se cargó correctamente.");
-                return;
-            }
+      // Encajar manteniendo proporción
+      let w = vw;
+      let h = w / RATIO;
+      if (h > vh) {
+        h = vh;
+        w = h * RATIO;
+      }
+      if (player) {
+        player.style.width = w + "px";
+        player.style.height = h + "px";
+      }
+    }
 
-            player = ruffle.createPlayer();
-            player.style.width = "800px";  // tamaño inicial
-            player.style.height = "600px";
+    // Pantalla completa sobre el contenedor
+    function goFullscreen() {
+      const stage = document.getElementById("stage");
+      if (stage.requestFullscreen) stage.requestFullscreen();
+      else if (stage.webkitRequestFullscreen) stage.webkitRequestFullscreen();
+      else if (stage.msRequestFullscreen) stage.msRequestFullscreen();
+    }
 
-            container.appendChild(player);
+    // Inicializa Ruffle y carga el SWF
+    window.addEventListener("load", () => {
+      const stage = document.getElementById("stage");
+      const ruffle = window.RufflePlayer?.newest();
+      if (!ruffle) {
+        console.error("Ruffle no se cargó. Revisa la etiqueta <script> del CDN.");
+        return;
+      }
+      player = ruffle.createPlayer();
+      player.id = "player";
+      stage.appendChild(player);
 
-            player.load(swfs[index])
-                .then(() => {
-                    ajustarProporcion(); // ajustar tamaño una vez cargado
-                })
-                .catch(err => console.error("Error cargando SWF:", err));
-        }
+      // Fijamos tamaño antes de cargar para evitar 0x0
+      fit();
 
-        function ajustarProporcion() {
-            if (!player) return;
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
-            const ratio = 4/3; // cambia si tus SWF tienen otra proporción
-            let w = vw;
-            let h = w / ratio;
-            if (h > vh) {
-                h = vh;
-                w = h * ratio;
-            }
-            player.style.width = w + "px";
-            player.style.height = h + "px";
-        }
+      // Carga el SWF
+      player.load(SWF_PATH).catch(err => {
+        console.error("Error cargando SWF:", err);
+      });
+    });
 
-        // Botones
-        document.getElementById("next").addEventListener("click", () => {
-            current = (current + 1) % swfs.length;
-            loadSWF(current);
-        });
+    // Reajusta en cambios de ventana y de pantalla completa
+    window.addEventListener("resize", fit);
+    document.addEventListener("fullscreenchange", fit);
 
-        document.getElementById("prev").addEventListener("click", () => {
-            current = (current - 1 + swfs.length) % swfs.length;
-            loadSWF(current);
-        });
-
-        document.getElementById("fullscreen").addEventListener("click", () => {
-            if (player) {
-                if (player.requestFullscreen) player.requestFullscreen();
-                else if (player.webkitRequestFullscreen) player.webkitRequestFullscreen();
-                else if (player.msRequestFullscreen) player.msRequestFullscreen();
-            }
-        });
-
-        window.addEventListener("resize", ajustarProporcion);
-
-        window.addEventListener("load", () => {
-            loadSWF(current);
-        });
-        document.addEventListener("fullscreenchange", ajustarProporcion);
-    </script>
+    // Botón FS
+    document.getElementById("fs").addEventListener("click", goFullscreen);
+  </script>
 </body>
 </html>
